@@ -1,3 +1,5 @@
 pytest
 hypothesis
 typer
+PyYAML
+faker

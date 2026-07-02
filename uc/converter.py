@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import warnings
+import math
 from collections import deque
 from dataclasses import dataclass
 from typing import Dict, Tuple, Callable, Deque, Set, Iterable, Optional
@@ -133,6 +134,44 @@ class ConversionGraph:
 
         def fwd(x, a=scale, b=offset): return a * x + b
         def inv(y, a=scale, b=offset): return (y - b) / a
+        self._add_pair(u_from, u_to, fwd, inv)
+
+    def add_log_ratio(
+            self,
+            u_from: str,
+            u_to: str,
+            multiplier: float,
+            reference: float = 1.0,
+            base: float = 10.0,
+    ) -> None:
+        """Add a logarithmic ratio conversion (dB-like scales).
+
+        Definition:
+            to = multiplier * log_base(from / reference)
+        Inverse:
+            from = reference * base ** (to / multiplier)
+
+        Preconditions:
+            from > 0 (domain of log); this is validated at conversion time.
+        """
+        self._assert_known_units(u_from, u_to)
+        self._assert_same_dimension(u_from, u_to)
+        if base <= 0 or base == 1.0:
+            raise ValueError("Log base must be >0 and != 1.")
+        if multiplier == 0:
+            raise ValueError("Multiplier must be non-zero.")
+        if reference <= 0:
+            raise ValueError("Reference level must be positive.")
+        log_base = math.log(base)
+
+        def fwd(x, m=multiplier, r=reference, lb=log_base):
+            if x <= 0:
+                raise ValueError(f"Log conversion needs positive input; got {x}.")
+            return m * (math.log(x / r) / lb)
+
+        def inv(y, m=multiplier, r=reference, b=base):
+            return r * (b ** (y / m))
+
         self._add_pair(u_from, u_to, fwd, inv)
 
     # ----- core conversion --------------------------------------------------------
