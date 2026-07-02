@@ -42,6 +42,18 @@ def test_conversion(unit_registry, from_unit, to_unit, expected):
     assert result.value == expected
 
 
+def test_add_log_ratio_requires_positive_reference():
+    graph = ConversionGraph()
+    graph.add_unit("power", "signal")
+    graph.add_unit("decibel", "signal")
+
+    with pytest.raises(ValueError, match="Reference level must be positive"):
+        graph.add_log_ratio("power", "decibel", multiplier=10, reference=0)
+
+    with pytest.raises(ValueError, match="Reference level must be positive"):
+        graph.add_log_ratio("power", "decibel", multiplier=10, reference=-1)
+
+
 def pytest_generate_tests(metafunc):
     if "test_conversion_v2" in metafunc.function.__name__:
         metafunc.parametrize(

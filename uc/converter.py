@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import math
 import warnings
 from collections import deque
 from dataclasses import dataclass
@@ -131,58 +130,6 @@ class ConversionGraph:
             raise ValueError("Scale must be non-zero.")
         fwd = lambda x, a=scale, b=offset: a * x + b
         inv = lambda y, a=scale, b=offset: (y - b) / a
-        self._add_pair(u_from, u_to, fwd, inv)
-
-    def add_log_ratio(
-            self,
-            u_from: str,
-            u_to: str,
-            multiplier: float,
-            reference: float = 1.0,
-            base: float = 10.0,
-    ) -> None:
-        """Add a logarithmic ratio conversion (dB-like scales).
-
-        Definition:
-            to = multiplier * log_base(from / reference)
-        Inverse:
-            from = reference * base ** (to / multiplier)
-
-        Examples:
-            - Power dB:     multiplier=10, reference=P0 (often 1.0)
-            - Amplitude dB: multiplier=20, reference=A0 (often 1.0)
-
-        Preconditions:
-            from > 0 (domain of log); this is validated at conversion time.
-
-        Args:
-            u_from: Source unit name.
-            u_to: Destination unit name.
-            multiplier: Non-zero multiplier applied to the logarithm.
-            reference: Positive reference level (default 1.0).
-            base: Logarithm base (>0 and != 1, default 10.0).
-
-        Raises:
-            KeyError: If either unit is unknown.
-            TypeError: If units have different dimensions.
-            ValueError: If `base <= 0 or base == 1`, or `multiplier == 0`.
-        """
-        self._assert_known_units(u_from, u_to)
-        self._assert_same_dimension(u_from, u_to)
-        if base <= 0 or base == 1.0:
-            raise ValueError("Log base must be >0 and != 1.")
-        if multiplier == 0:
-            raise ValueError("Multiplier must be non-zero.")
-        log_base = math.log(base)
-
-        def fwd(x, m=multiplier, r=reference, lb=log_base):
-            if x <= 0:
-                raise ValueError(f"Log conversion needs positive input; got {x}.")
-            return m * (math.log(x / r) / lb)
-
-        def inv(y, m=multiplier, r=reference, b=base):
-            return r * (b ** (y / m))
-
         self._add_pair(u_from, u_to, fwd, inv)
 
     # ----- core conversion --------------------------------------------------------
