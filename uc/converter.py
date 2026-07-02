@@ -166,7 +166,8 @@ class ConversionGraph:
 
         def fwd(x, m=multiplier, r=reference, lb=log_base):
             if x <= 0:
-                raise ValueError(f"Log conversion needs positive input; got {x}.")
+                raise ValueError(
+                    f"Log conversion needs positive input; got {x}.")
             return m * (math.log(x / r) / lb)
 
         def inv(y, m=multiplier, r=reference, b=base):
