@@ -83,7 +83,8 @@ class ConversionGraph:
         """
         if name in self._units:
             if self._units[name].dimension != dimension:
-                raise ValueError(f"Unit '{name}' already exists with a different dimension.")
+                raise ValueError(
+                    f"Unit '{name}' already exists with a different dimension.")
             return
         self._units[name] = Unit(name=name, dimension=dimension)
 
@@ -104,8 +105,9 @@ class ConversionGraph:
         self._assert_same_dimension(u_from, u_to)
         if scale == 0:
             raise ValueError("Scale must be non-zero.")
-        fwd = lambda x, s=scale: s * x
-        inv = lambda y, s=scale: y / s
+
+        def fwd(x, s=scale): return s * x
+        def inv(y, s=scale): return y / s
         self._add_pair(u_from, u_to, fwd, inv)
 
     def add_affine(self, u_from: str, u_to: str, scale: float, offset: float) -> None:
@@ -128,8 +130,9 @@ class ConversionGraph:
         self._assert_same_dimension(u_from, u_to)
         if scale == 0:
             raise ValueError("Scale must be non-zero.")
-        fwd = lambda x, a=scale, b=offset: a * x + b
-        inv = lambda y, a=scale, b=offset: (y - b) / a
+
+        def fwd(x, a=scale, b=offset): return a * x + b
+        def inv(y, a=scale, b=offset): return (y - b) / a
         self._add_pair(u_from, u_to, fwd, inv)
 
     # ----- core conversion --------------------------------------------------------
@@ -162,7 +165,8 @@ class ConversionGraph:
 
         result_value = self._convert_value(q.value, from_unit, to_unit)
         if result_value is None:
-            raise ValueError(f"No conversion path found from '{from_unit}' to '{to_unit}'.")
+            raise ValueError(
+                f"No conversion path found from '{from_unit}' to '{to_unit}'.")
         return Quantity(value=result_value, unit=to_unit)
 
     # ----- helpers ----------------------------------------------------------------
@@ -198,7 +202,8 @@ class ConversionGraph:
         d1 = self._units[u1].dimension
         d2 = self._units[u2].dimension
         if d1 != d2:
-            raise TypeError(f"Incompatible dimensions: '{u1}'({d1}) vs '{u2}'({d2})")
+            raise TypeError(
+                f"Incompatible dimensions: '{u1}'({d1}) vs '{u2}'({d2})")
 
     def _assert_convertible(self, u_from: str, u_to: str) -> None:
         """Composite validation for a conversion request."""
